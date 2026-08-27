@@ -1,4 +1,4 @@
-import {npcQuestForWorld} from './npcQuest';
+import {npcQuestForWorld} from './npcQuest.js';
 
 export function guidanceForNpc(world,{objectiveIndex=0,objectPosition=null,npcPosition=null}={}){
   const quest=npcQuestForWorld(world);

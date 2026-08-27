@@ -1,0 +1,1 @@
+Do not replace the canonical Slava/Denis reference with generic avatars. Slava is taller and on the right; Denis is shorter and on the left.

@@ -1,0 +1,10 @@
+{
+  "$schema":"https://developers.cloudflare.com/workers/wrangler/config-schema.json",
+  "name":"my-living-world-tv",
+  "main":"src/index.js",
+  "compatibility_date":"2026-08-27",
+  "durable_objects":{
+    "bindings":[{"name":"TV_ROOM","class_name":"TVRoom"}]
+  },
+  "migrations":[{"tag":"v1","new_sqlite_classes":["TVRoom"]}]
+}

@@ -1,15 +1,22 @@
-import React,{useState} from 'react';
-import {Float,Text,useFrame} from '@react-three/fiber';
+import React,{useEffect,useRef,useState} from 'react';
+import {Float,Text,useFrame} from '@react-three/drei';
 import {mainCharacters} from '../game/mainCharacters';
+import {heroPairBehavior} from '../game/mainCharacterBehavior';
 
-function MainCharacter({character,selected,onSelect}){
+function MainCharacter({character,selected,behavior,onSelect}){
   const h=character.heightScale;
   const accent=character.accent==='sky'?'#dbeafe':'#bfdbfe';
-  const [phase]=useState(()=>character.id==='slava'?.2:1.1);
-  let y=0;
-  useFrame((_,delta)=>{phase; y=delta});
-  return <group position={[character.id==='slava'?-0.72:0.72,-1.25,0]} scale={[h,h,h]} onClick={e=>{e.stopPropagation();onSelect?.(character.id)}}>
-    <group position={[0,1.2,0]} rotation={[0,Math.sin((phase+Date.now()*.0007))*.04,0]}>
+  const root=useRef(null);
+  const body=useRef(null);
+  useFrame((state)=>{
+    const t=state.clock.elapsedTime*behavior.speed;
+    const bounce=Math.abs(Math.sin(t*5))*behavior.bounce;
+    const sway=Math.sin(t*2.5)*behavior.sway;
+    if(root.current) root.current.position.y=bounce;
+    if(body.current) body.current.rotation.z=sway;
+  });
+  return <group ref={root} position={[character.id==='slava'?-0.72:0.72,-1.25,0]} scale={[h,h,h]} onClick={e=>{e.stopPropagation();onSelect?.(character.id)}}>
+    <group ref={body} position={[0,1.2,0]}>
       <mesh position={[0,0.75,0]}><sphereGeometry args={[.29,20,20]}/><meshStandardMaterial color="#f3c79f"/></mesh>
       <mesh position={[0,0.86,-.03]}><sphereGeometry args={[.25,20,12]}/><meshStandardMaterial color="#b7783b"/></mesh>
       <mesh position={[0,.42,0]}><boxGeometry args={[.56,.72,.34]}/><meshStandardMaterial color="#f5f5f4"/></mesh>
@@ -25,8 +32,10 @@ function MainCharacter({character,selected,onSelect}){
   </group>
 }
 
-export default function MainCharacters3D({selectedId,onSelect}){
+export default function MainCharacters3D({selectedId,onSelect,activity='idle'}){
   const [active,setActive]=useState(selectedId||'slava');
+  useEffect(()=>{if(selectedId)setActive(selectedId)},[selectedId]);
   const choose=id=>{setActive(id);onSelect?.(id)};
-  return <group>{mainCharacters().map(c=><MainCharacter key={c.id} character={c} selected={active===c.id} onSelect={choose}/>)}</group>
+  const pair=heroPairBehavior(active,activity);
+  return <group>{mainCharacters().map(c=><MainCharacter key={c.id} character={c} selected={active===c.id} behavior={c.id===active?pair.active:pair.companion} onSelect={choose}/>)}</group>
 }

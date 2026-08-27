@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "page": "A4",
+  "markerSize": 6,
+  "objects": [
+    {"id":"rocket","world":"space","name":"Ракета","emoji":"🚀","model":"rocket"},
+    {"id":"car","world":"cars","name":"Гоночная машина","emoji":"🚗","model":"car"},
+    {"id":"train","world":"trains","name":"Паровоз","emoji":"🚂","model":"train"},
+    {"id":"trex","world":"dinos","name":"Ти-рекс","emoji":"🦖","model":"trex"}
+  ]
+}

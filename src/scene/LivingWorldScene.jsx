@@ -30,7 +30,7 @@ function MovingObject({ object, index, total, action, onSelect, onPosition }) {
     if (!target) return { ...state, phase: state.phase + delta };
     const steer = Math.min(1, delta * 2.8 + Math.sin(actionProgress(action) * Math.PI) * 0.16);
     return { ...state, x: state.x + (target.x - state.x) * steer, z: state.z + (target.z - state.z) * steer, phase: state.phase + delta };
-  });
+  }));
   useEffect(() => { onPosition?.(object.id, motion); }, [object.id, motion, onPosition]);
   const running = actionRunning(action) && action.objectId === object.id;
   return <group position={[motion.x, object.world === 'space' ? motion.altitude || 0 : -0.08, motion.z]} onClick={(event) => { event.stopPropagation(); onSelect(object); }}><LivingObject3D object={object} actionProgress={running ? actionProgress(action) : 0} actionRunning={running} /></group>;

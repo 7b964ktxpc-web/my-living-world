@@ -1,4 +1,4 @@
-import {heroInteractionFor} from './mainCharacterInteractions';
+import {heroInteractionFor} from './mainCharacterInteractions.js';
 
 export const INTERACTION_PHASES=['ready','approach','interact','complete'];
 

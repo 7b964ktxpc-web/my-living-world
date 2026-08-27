@@ -1,0 +1,1 @@
+export function rewardForMinigame(run,awardedRuns={}){if(!run||run.status!=='success'||!run.id)return {awardedRuns,granted:0};if(awardedRuns[run.id])return {awardedRuns,granted:0};return {awardedRuns:{...awardedRuns,[run.id]:true},granted:Number(run.reward||0)} }

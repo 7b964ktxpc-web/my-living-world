@@ -8,10 +8,11 @@ const ACTIONS={
 };
 
 export function choreographyFor(action,heroId='slava'){
-  const base=ACTIONS[action]||ACTIONS.observe;
+  const normalizedAction=Object.prototype.hasOwnProperty.call(ACTIONS,action)?action:'observe';
+  const base=ACTIONS[normalizedAction];
   const primaryHero=heroId==='denis'?'denis':'slava';
   const secondaryHero=primaryHero==='slava'?'denis':'slava';
-  return {...base,action,primaryHero,secondaryHero};
+  return {...base,action:normalizedAction,primaryHero,secondaryHero};
 }
 
 export function choreographyProgress(elapsed,duration){

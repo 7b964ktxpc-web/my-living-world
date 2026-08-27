@@ -18,7 +18,7 @@ import { createCoOpState, applyCoOpEvent } from '../game/coOpRuntime.js';
 import { environmentState } from '../game/worldEnvironment.js';
 
 const COLORS = { space: '#202b5a', cars: '#627d63', trains: '#6f6a68', dinos: '#6d995b' };
-function Floor({ world }) { return <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.35, 0]} receiveShadow><planeGeometry args={[12, 7]} /><meshStandardMaterial color={COLORS[world] || COLORS.space} /></mesh>; }
+function Floor({ world }) { return <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.35, 0]} receiveShadow><planeGeometry args={[12, 7]} /><meshStandardMaterial color={COLORS[world] || COLORS.space} roughness={1} /></mesh>; }
 function WorldDecor({ world }) { if (world === 'space') return <Stars radius={45} depth={30} count={900} factor={1.8} />; if (world === 'trains') return <mesh position={[0, -1.15, 0]}><boxGeometry args={[8, 0.06, 0.45]} /><meshStandardMaterial color="#3b3b3b" /></mesh>; return null; }
 function MovingObject({ object, index, total, action, onSelect }) {
   const [motion, setMotion] = useState(() => ({ ...defaultSpawn(index, total), phase: index * 0.7 }));

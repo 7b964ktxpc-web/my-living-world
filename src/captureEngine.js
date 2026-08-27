@@ -1,6 +1,7 @@
 import {estimateMarkerCorners,orderCorners,markerQuality} from './vision/markerDetector';
 import {warpImage} from './vision/perspective';
 import {segmentDrawing,cropSegment} from './vision/drawingSegmenter';
+import {classifyDrawing} from './vision/templateMatcher';
 
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 
@@ -15,7 +16,7 @@ export function loadImage(source){
   });
 }
 
-export async function scanDrawing(file){
+export async function scanDrawing(file,{templateHint=''}={}){
   const img=await loadImage(file);
   const max=1600;
   const scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
@@ -45,9 +46,10 @@ export async function scanDrawing(file){
 
   const segmented=segmentDrawing(out);
   const drawing=segmented.hasDrawing?cropSegment(segmented.canvas,segmented.bbox):segmented.canvas;
-  const segmentationConfidence=segmented.hasDrawing?clamp(.45+Math.min(segmented.inkRatio*.9, .45),0,.9):.25;
+  const segmentationConfidence=segmented.hasDrawing?clamp(.45+Math.min(segmented.inkRatio*.9,.45),0,.9):.25;
   const markerConfidence=ordered?quality:.42;
   const confidence=clamp(markerConfidence*.62+segmentationConfidence*.38,0,.98);
+  const template=classifyDrawing({templateHint,markerCount:detected.candidates.length,inkRatio:segmented.inkRatio,confidence});
 
   return {
     dataUrl:out.toDataURL('image/jpeg',.92),
@@ -61,7 +63,8 @@ export async function scanDrawing(file){
     detected:Boolean(ordered),
     usedMarkerHint:Boolean(ordered),
     mode,
-    markerCount:detected.candidates.length
+    markerCount:detected.candidates.length,
+    template
   };
 }
 

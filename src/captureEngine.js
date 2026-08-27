@@ -1,3 +1,6 @@
+import {estimateMarkerCorners,orderCorners,markerQuality} from './vision/markerDetector';
+import {warpImage} from './vision/perspective';
+
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 
 export function loadImage(source){
@@ -11,35 +14,6 @@ export function loadImage(source){
   });
 }
 
-function brightness(data,i){return (data[i]+data[i+1]+data[i+2])/3}
-function blackRatio(ctx,x,y,size=28){
-  const sx=clamp(Math.round(x-size/2),0,Math.max(0,ctx.canvas.width-size));
-  const sy=clamp(Math.round(y-size/2),0,Math.max(0,ctx.canvas.height-size));
-  const p=ctx.getImageData(sx,sy,size,size).data;
-  let dark=0;
-  for(let i=0;i<p.length;i+=4) if(brightness(p,i)<82) dark++;
-  return dark/(p.length/4);
-}
-
-export function detectCornerMarkers(ctx){
-  const w=ctx.canvas.width,h=ctx.canvas.height;
-  const zones=[[.12,.12],[.88,.12],[.12,.88],[.88,.88]];
-  const markers=[];
-  const radius=.11;
-  for(const [nx,ny] of zones){
-    let best={score:0,x:nx*w,y:ny*h};
-    for(let gx=-4;gx<=4;gx++) for(let gy=-4;gy<=4;gy++){
-      const x=clamp((nx+gx*radius/4)*w,20,w-20);
-      const y=clamp((ny+gy*radius/4)*h,20,h-20);
-      const score=blackRatio(ctx,x,y,Math.max(18,Math.round(Math.min(w,h)*.035)));
-      if(score>best.score)best={score,x,y};
-    }
-    markers.push(best);
-  }
-  const confidence=markers.reduce((s,m)=>s+m.score,0)/4;
-  return {markers,confidence,detected:markers.every(m=>m.score>.28)};
-}
-
 export async function scanDrawing(file){
   const img=await loadImage(file);
   const max=1600;
@@ -49,22 +23,35 @@ export async function scanDrawing(file){
   const source=document.createElement('canvas');source.width=w;source.height=h;
   const sctx=source.getContext('2d',{willReadFrequently:true});
   sctx.drawImage(img,0,0,w,h);
-  const markerResult=detectCornerMarkers(sctx);
-  const marginX=Math.round(w*(markerResult.detected?.075:.06));
-  const marginY=Math.round(h*(markerResult.detected?.075:.06));
-  const left=marginX,right=w-marginX,top=marginY,bottom=h-marginY;
-  const out=document.createElement('canvas');
-  const ow=Math.max(320,right-left),oh=Math.max(320,bottom-top);
-  out.width=ow;out.height=oh;
-  const octx=out.getContext('2d');
-  octx.fillStyle='#fff';octx.fillRect(0,0,ow,oh);
-  octx.drawImage(source,left,top,right-left,bottom-top,0,0,ow,oh);
+
+  const detected=estimateMarkerCorners(sctx.getImageData(0,0,w,h));
+  const ordered=orderCorners(detected.corners);
+  const quality=markerQuality(ordered,w,h);
+  let out=null;
+  let mode='Автокадрирование';
+
+  // Only warp when four plausible corner candidates exist. Otherwise keep a
+  // conservative crop rather than producing a distorted child drawing.
+  if(ordered&&quality>=.62){
+    out=warpImage(source,ordered,1000,1000);
+    mode='4 маркера + перспектива';
+  }
+  if(!out){
+    const mx=Math.round(w*.06),my=Math.round(h*.06);
+    const crop=document.createElement('canvas');
+    crop.width=Math.max(320,w-2*mx);crop.height=Math.max(320,h-2*my);
+    crop.getContext('2d').drawImage(source,mx,my,w-2*mx,h-2*my,0,0,crop.width,crop.height);
+    out=crop;
+  }
+
   return {
-    dataUrl:out.toDataURL('image/jpeg',.92),width:ow,height:oh,
-    confidence:clamp(markerResult.confidence*1.2+(markerResult.detected?.35:.08),0,0.99),
-    detected:markerResult.detected,
-    usedMarkerHint:markerResult.detected,
-    markers:markerResult.markers.map(m=>({x:m.x/w,y:m.y/h,score:m.score}))
+    dataUrl:out.toDataURL('image/jpeg',.92),
+    width:out.width,height:out.height,
+    confidence:clamp(ordered?quality*.96:.48,0,.98),
+    detected:Boolean(ordered),
+    usedMarkerHint:Boolean(ordered),
+    mode,
+    markerCount:detected.candidates.length
   };
 }
 

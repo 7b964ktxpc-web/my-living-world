@@ -1,5 +1,6 @@
 import {estimateMarkerCorners,orderCorners,markerQuality} from './vision/markerDetector';
 import {warpImage} from './vision/perspective';
+import {segmentDrawing,cropSegment} from './vision/drawingSegmenter';
 
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 
@@ -30,8 +31,6 @@ export async function scanDrawing(file){
   let out=null;
   let mode='Автокадрирование';
 
-  // Only warp when four plausible corner candidates exist. Otherwise keep a
-  // conservative crop rather than producing a distorted child drawing.
   if(ordered&&quality>=.62){
     out=warpImage(source,ordered,1000,1000);
     mode='4 маркера + перспектива';
@@ -44,10 +43,21 @@ export async function scanDrawing(file){
     out=crop;
   }
 
+  const segmented=segmentDrawing(out);
+  const drawing=segmented.hasDrawing?cropSegment(segmented.canvas,segmented.bbox):segmented.canvas;
+  const segmentationConfidence=segmented.hasDrawing?clamp(.45+Math.min(segmented.inkRatio*.9, .45),0,.9):.25;
+  const markerConfidence=ordered?quality:.42;
+  const confidence=clamp(markerConfidence*.62+segmentationConfidence*.38,0,.98);
+
   return {
     dataUrl:out.toDataURL('image/jpeg',.92),
+    drawingDataUrl:drawing.toDataURL('image/png'),
     width:out.width,height:out.height,
-    confidence:clamp(ordered?quality*.96:.48,0,.98),
+    drawingWidth:drawing.width,drawingHeight:drawing.height,
+    confidence,
+    segmentationConfidence,
+    hasDrawing:segmented.hasDrawing,
+    inkRatio:segmented.inkRatio,
     detected:Boolean(ordered),
     usedMarkerHint:Boolean(ordered),
     mode,

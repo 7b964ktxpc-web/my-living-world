@@ -1,4 +1,4 @@
-import {normalizeActiveHero} from './mainCharacters';
+import {normalizeActiveHero} from './mainCharacters.js';
 
 const BEHAVIOR={
   idle:{speed:0,bounce:0,sway:.02},

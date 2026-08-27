@@ -1,35 +1,10 @@
-import React,{useEffect,useMemo,useRef,useState} from 'react';
+import React,{useEffect,useState} from 'react';
 import {Canvas,useFrame} from '@react-three/fiber';
 import {OrbitControls,Stars,Float,Text} from '@react-three/drei';
-import * as THREE from 'three';
 import LivingObject3D from './LivingObject3D';
 import {defaultSpawn,tickObject} from './worldPhysics';
-
-function WorldFloor({world}){
- const colors={space:'#202b5a',cars:'#627d63',trains:'#6f6a68',dinos:'#6d995b'};
- return <mesh rotation={[-Math.PI/2,0,0]} position={[0,-1.35,0]} receiveShadow><planeGeometry args={[12,7]}/><meshStandardMaterial color={colors[world]||colors.space} roughness={1}/></mesh>
-}
-function DecorativeWorld({world}){
- if(world==='space') return <><Stars radius={45} depth={30} count={900} factor={1.8}/><mesh position={[-2,1,-2]}><sphereGeometry args={[.9,24,24]}/><meshStandardMaterial color="#5f8cff"/></mesh></>;
- if(world==='dinos') return <><mesh position={[-2,-.8,-1]}><coneGeometry args={[.65,1.8,16]}/><meshStandardMaterial color="#7f7056"/></mesh><mesh position={[2,-.9,-1.4]}><coneGeometry args={[.45,1.2,12]}/><meshStandardMaterial color="#6c8f55"/></mesh></>;
- if(world==='trains') return <><mesh position={[0,-1.15,0]} rotation={[0,0,0]}><boxGeometry args={[8,.06,.45]}/><meshStandardMaterial color="#3b3b3b"/></mesh><mesh position={[0,-1.08,.65]}><boxGeometry args={[8,.05,.08]}/><meshStandardMaterial color="#d8d8d8"/></mesh></>;
- return <><mesh position={[0,-1.18,0]}><boxGeometry args={[8,.08,2.1]}/><meshStandardMaterial color="#555"/></mesh><mesh position={[0,-1.12,0]}><boxGeometry args={[8,.04,.08]}/><meshStandardMaterial color="#ffd166"/></mesh></>;
-}
-function MovingObject({object,index,total,onSelect}){
- const [motion,setMotion]=useState(()=>({...defaultSpawn(index,total),phase:index*.7}));
- useFrame((_,delta)=>setMotion(s=>({...tickObject(s,Math.min(delta,.05),object.world),phase:s.phase+delta})));
- return <group position={[motion.x,motion.z===0?-.15:-.05,motion.z]} onClick={e=>{e.stopPropagation();onSelect?.(object)}}><LivingObject3D object={object}/></group>
-}
-export default function LivingWorldScene({world,objects=[],onSelect}){
- const [selected,setSelected]=useState(null);
- const current=objects.filter(o=>o.world===world).slice(0,8);
- useEffect(()=>{setSelected(null)},[world]);
- return <Canvas camera={{position:[0,1,6.4],fov:45}} shadows fallback={<div className="canvas-fallback">3D-сцена недоступна на этом устройстве</div>} onPointerMissed={()=>setSelected(null)}>
-  <ambientLight intensity={1.35}/><directionalLight position={[4,6,4]} intensity={2.1} castShadow/>
-  <DecorativeWorld world={world}/><WorldFloor world={world}/>
-  {current.map((object,i)=><MovingObject key={object.id||i} object={object} index={i} total={current.length} onSelect={item=>{setSelected(item);onSelect?.(item)}}/>)}
-  {current.length===0&&<Float><Text position={[0,.5,0]} fontSize={.28} color="white" anchorX="center">Создай свой первый объект ✨</Text></Float>}
-  {selected&&<Float><Text position={[0,1.85,0]} fontSize={.25} color="white" anchorX="center">{selected.label||selected.name} · живёт здесь</Text></Float>}
-  <OrbitControls enablePan={false} minDistance={4} maxDistance={9}/>
- </Canvas>
-}
+import {actionProgress,actionRunning} from './interactionEngine';
+function WorldFloor({world}){const colors={space:'#202b5a',cars:'#627d63',trains:'#6f6a68',dinos:'#6d995b'};return <mesh rotation={[-Math.PI/2,0,0]} position={[0,-1.35,0]} receiveShadow><planeGeometry args={[12,7]}/><meshStandardMaterial color={colors[world]||colors.space} roughness={1}/></mesh>}
+function DecorativeWorld({world}){if(world==='space')return <><Stars radius={45} depth={30} count={900} factor={1.8}/><mesh position={[-2,1,-2]}><sphereGeometry args={[.9,24,24]}/><meshStandardMaterial color="#5f8cff"/></mesh></>;if(world==='dinos')return <><mesh position={[-2,-.8,-1]}><coneGeometry args={[.65,1.8,16]}/><meshStandardMaterial color="#7f7056"/></mesh><mesh position={[2,-.9,-1.4]}><coneGeometry args={[.45,1.2,12]}/><meshStandardMaterial color="#6c8f55"/></mesh></>;if(world==='trains')return <><mesh position={[0,-1.15,0]}><boxGeometry args={[8,.06,.45]}/><meshStandardMaterial color="#3b3b3b"/></mesh><mesh position={[0,-1.08,.65]}><boxGeometry args={[8,.05,.08]}/><meshStandardMaterial color="#d8d8d8"/></mesh></>;return <><mesh position={[0,-1.18,0]}><boxGeometry args={[8,.08,2.1]}/><meshStandardMaterial color="#555"/></mesh><mesh position={[0,-1.12,0]}><boxGeometry args={[8,.04,.08]}/><meshStandardMaterial color="#ffd166"/></mesh></>}
+function MovingObject({object,index,total,onSelect,action}){const [motion,setMotion]=useState(()=>({...defaultSpawn(index,total),phase:index*.7}));useFrame((_,delta)=>setMotion(s=>({...tickObject(s,Math.min(delta,.05),object.world),phase:s.phase+delta})));const running=actionRunning(action)&&action.objectId===object.id;const progress=running?actionProgress(action):0;return <group position={[motion.x,motion.z===0?-.15:-.05,motion.z]} onClick={e=>{e.stopPropagation();onSelect?.(object)}}><LivingObject3D object={object} actionProgress={progress} actionRunning={running}/></group>}
+export default function LivingWorldScene({world,objects=[],selectedId,onSelect,action}){const [selected,setSelected]=useState(null);const current=objects.filter(o=>o.world===world).slice(0,8);useEffect(()=>setSelected(current.find(o=>o.id===selectedId)||null),[selectedId,current.length,world]);return <Canvas camera={{position:[0,1,6.4],fov:45}} shadows fallback={<div className="canvas-fallback">3D-сцена недоступна на этом устройстве</div>} onPointerMissed={()=>{setSelected(null);onSelect?.(null)}}><ambientLight intensity={1.35}/><directionalLight position={[4,6,4]} intensity={2.1} castShadow/><DecorativeWorld world={world}/><WorldFloor world={world}/>{current.map((object,i)=><MovingObject key={object.id||i} object={object} index={i} total={current.length} action={action} onSelect={item=>{setSelected(item);onSelect?.(item)}}/>)}{current.length===0&&<Float><Text position={[0,.5,0]} fontSize={.28} color="white" anchorX="center">Создай свой первый объект ✨</Text></Float>}{selected&&<Float><Text position={[0,1.85,0]} fontSize={.25} color="white" anchorX="center">{selected.label||selected.name} · живёт здесь</Text></Float>}<OrbitControls enablePan={false} minDistance={4} maxDistance={9}/></Canvas>}

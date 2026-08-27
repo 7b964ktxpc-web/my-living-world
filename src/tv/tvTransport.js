@@ -1,0 +1,28 @@
+import {TV_MESSAGE_TYPES,isValidMessage,safeParseMessage} from './tvProtocol';
+
+export function createTransport(sessionId,{onMessage,onStatus}={}){
+ const listeners={onMessage,onStatus};
+ let closed=false; let socket=null; let channel=null;
+ const report=status=>listeners.onStatus?.(status);
+ const dispatch=message=>{if(!closed&&isValidMessage(message))listeners.onMessage?.(message)};
+ const send=message=>{
+  if(closed)return false;
+  if(socket?.readyState===WebSocket.OPEN){socket.send(JSON.stringify(message));return true}
+  try{channel?.postMessage(message);return true}catch{return false}
+ };
+ try{channel=new BroadcastChannel(`mlw-tv:${sessionId}`);channel.onmessage=e=>dispatch(safeParseMessage(e.data)||e.data);report('local') }catch{report('offline')}
+ const endpoint=import.meta.env.VITE_TV_WS_URL;
+ if(endpoint){
+  try{
+   socket=new WebSocket(`${endpoint.replace(/\/$/,'')}/${encodeURIComponent(sessionId)}`);
+   socket.onopen=()=>{report('connected')};
+   socket.onmessage=e=>dispatch(safeParseMessage(e.data));
+   socket.onerror=()=>report('error');
+   socket.onclose=()=>{if(!closed)report(channel?'local':'offline')};
+  }catch{report('local')}
+ }
+ return {send,close:()=>{closed=true;socket?.close();channel?.close()}};
+}
+
+export const controllerActions={SELECT:'select',PLAY:'play',WORLD:'world',PING:'ping'};
+export function makeControllerCommand(action,payload={}){return {v:1,type:TV_MESSAGE_TYPES.CONTROL,ts:Date.now(),payload:{action,...payload}}}

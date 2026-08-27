@@ -1,4 +1,4 @@
-import {normalizeActiveHero} from './mainCharacters';
+import {normalizeActiveHero} from './mainCharacters.js';
 
 const INTERACTIONS={
   space:{hero:'Слава готовит запуск вместе с Денисом 🚀',action:'launch'},

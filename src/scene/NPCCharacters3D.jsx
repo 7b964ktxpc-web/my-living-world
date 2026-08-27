@@ -1,0 +1,4 @@
+import React,{useState} from 'react';
+import {Float,Text} from '@react-three/drei';
+function NPC({npc,onEvent}){const [hover,setHover]=useState(false);return <group position={[npc.x,-.72,npc.z]} rotation={[0,npc.heading||0,0]} onClick={e=>{e.stopPropagation();onEvent?.(npc)}} onPointerOver={()=>setHover(true)} onPointerOut={()=>setHover(false)}><Float speed={1.1} floatIntensity={.08}><group scale={hover?1.08:1}><mesh position={[0,.4,0]}><sphereGeometry args={[.23,16,16]}/><meshStandardMaterial color="#f2c38b"/></mesh><mesh position={[0,.05,0]}><boxGeometry args={[.34,.5,.22]}/><meshStandardMaterial color="#6b7280"/></mesh><Text position={[0,.85,0]} fontSize={.13} color="white" anchorX="center">{npc.state==='greeting'?'👋 ':npc.state==='celebrate'?'🎉 ':''}{npc.label}</Text></group></Float></group>}
+export default function NPCCharacters3D({npcs=[],onEvent}){return <>{npcs.map(npc=><NPC key={npc.id} npc={npc} onEvent={onEvent}/>)}</>}

@@ -1,6 +1,6 @@
 export const MAIN_CHARACTERS={
-  slava:{id:'slava',name:'Слава',role:'старший брат',heightScale:1.16,ageLabel:'старший',outfit:{top:'light-hoodie',bottom:'light-pants',shoes:'light-sneakers',backpack:'dark-backpack'},personality:'любит приключения и помогает Денису',color:'cream',accent:'sky'},
-  denis:{id:'denis',name:'Денис',role:'младший брат',heightScale:.96,ageLabel:'младший',outfit:{top:'light-hoodie',bottom:'light-pants',shoes:'light-sneakers',backpack:'dark-backpack'},personality:'любознательный и смелый',color:'cream',accent:'blue'}
+  slava:{id:'slava',name:'Слава',role:'старший брат',heightScale:1.18,ageLabel:'старший',outfit:{top:'navy-varsity',bottom:'light-pants',shoes:'gray-sneakers',backpack:'dark-backpack',cap:'boston-blue'},personality:'любит приключения и помогает Денису',color:'navy',accent:'sky'},
+  denis:{id:'denis',name:'Денис',role:'младший брат',heightScale:.94,ageLabel:'младший',outfit:{top:'navy-varsity',bottom:'dark-pants',shoes:'gray-sneakers',backpack:'dark-backpack',cap:'boston-blue'},personality:'любознательный и добрый',color:'navy',accent:'blue'}
 };
 export const MAIN_CHARACTER_ORDER=['slava','denis'];
 export function mainCharacter(id){return MAIN_CHARACTERS[id]||MAIN_CHARACTERS.slava}

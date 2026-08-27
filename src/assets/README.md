@@ -1,0 +1,1 @@
+Character asset note: the canonical pair is stored as the user-provided reference and must not be replaced by generic 3D avatars.

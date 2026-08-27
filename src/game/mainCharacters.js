@@ -6,3 +6,6 @@ export const MAIN_CHARACTER_ORDER=['slava','denis'];
 export function mainCharacter(id){return MAIN_CHARACTERS[id]||MAIN_CHARACTERS.slava}
 export function mainCharacters(){return MAIN_CHARACTER_ORDER.map(id=>MAIN_CHARACTERS[id])}
 export function characterPair(){return {leader:MAIN_CHARACTERS.slava,partner:MAIN_CHARACTERS.denis}}
+export const DEFAULT_ACTIVE_HERO='slava';
+export function isMainCharacter(id){return MAIN_CHARACTER_ORDER.includes(id)}
+export function normalizeActiveHero(id){return isMainCharacter(id)?id:DEFAULT_ACTIVE_HERO}

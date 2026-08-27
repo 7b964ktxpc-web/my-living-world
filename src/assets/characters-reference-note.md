@@ -1,0 +1,1 @@
+Canonical visual reference: user-provided image. Slava is the taller child on the right; Denis is the shorter child on the left; both have light/blond hair.

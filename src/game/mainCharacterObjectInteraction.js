@@ -1,0 +1,9 @@
+const INTERACTIONS={
+  space:{rocket:{action:'launch',hero:'slava',companion:'denis',message:'Слава запускает ракету, а Денис готовит маяк 🚀'},planet:{action:'inspect',hero:'denis',companion:'slava',message:'Денис исследует планету, Слава подсвечивает маршрут 🪐'},rover:{action:'drive',hero:'slava',companion:'denis',message:'Братья отправляют луноход исследовать новую точку 🌙'}},
+  cars:{car:{action:'ride',hero:'slava',companion:'denis',message:'Слава садится за руль, Денис готовит трассу 🚗'},truck:{action:'load',hero:'denis',companion:'slava',message:'Денис загружает грузовик, Слава открывает гараж 📦'},firetruck:{action:'rescue',hero:'slava',companion:'denis',message:'Братья выезжают на спасательную миссию 🚒'}},
+  trains:{steam:{action:'depart',hero:'slava',companion:'denis',message:'Слава даёт отправление, Денис проверяет станцию 🚂'},fast:{action:'signal',hero:'denis',companion:'slava',message:'Денис переключает сигнал, Слава ждёт отправления 🚄'},cargo:{action:'load',hero:'slava',companion:'denis',message:'Братья загружают вагон и отправляют груз 📦'}},
+  dinos:{trex:{action:'observe',hero:'slava',companion:'denis',message:'Слава наблюдает за динозавром, Денис ищет следы 🦖'},triceratops:{action:'feed',hero:'denis',companion:'slava',message:'Денис осторожно кормит динозавра 🌿'},stego:{action:'follow',hero:'slava',companion:'denis',message:'Братья следуют за стегозавром по острову 🦕'}}
+};
+export function heroObjectInteraction(world,type){return INTERACTIONS[world]?.[type]||INTERACTIONS[world]?.car||null}
+export function interactionState(world,type,activeHero='slava'){const item=heroObjectInteraction(world,type);if(!item)return null;return {...item,world,type,activeHero,phase:'ready'} }
+export function interactionNextPhase(state){if(!state)return null;const phases=['ready','approach','action','complete'];const i=phases.indexOf(state.phase);return {...state,phase:phases[Math.min(i+1,phases.length-1)]}}

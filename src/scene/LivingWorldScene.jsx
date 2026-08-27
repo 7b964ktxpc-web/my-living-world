@@ -43,7 +43,7 @@ function NpcRuntime({ current, setNpcs, positions }) {
   })));
   return null;
 }
-function LivingWorldSceneContent({ world, objects = [], selectedId, onSelect, onPoint, onWorldEvent, action, minigame, collectedObjectives = [], onObjectiveCollect }) {
+function LivingWorldSceneContent({ world, objects = [], selectedId, selectedCharacterId='slava', onSelect, onCharacterSelect, onPoint, onWorldEvent, action, minigame, collectedObjectives = [], onObjectiveCollect }) {
   const [selected, setSelected] = useState(null); const [npcs, setNpcs] = useState(() => createNpcState(world)); const [npcEvent, setNpcEvent] = useState('idle'); const [coOp, setCoOp] = useState(() => createCoOpState(world));
   const positions = useRef({}); const current = useMemo(() => objects.filter((item) => item.world === world).slice(0, 8), [objects, world]); const points = useMemo(() => pointsForWorld(world), [world]); const guide = guideState(world, collectedObjectives); const environment = environmentState(world, coOp.action, true);
   useEffect(() => setSelected(current.find((item) => item.id === selectedId) || null), [selectedId, current]);
@@ -52,7 +52,7 @@ function LivingWorldSceneContent({ world, objects = [], selectedId, onSelect, on
   const heroActivity = minigame?.status === 'success' ? 'celebrate' : actionRunning(action) ? 'excited' : minigame?.status === 'running' ? 'walking' : 'idle';
   return <Canvas camera={{ position: [0, 1, 6.4], fov: 45 }} shadows onPointerMissed={() => { setSelected(null); onSelect?.(null); }}>
     <ambientLight intensity={1.35} /><directionalLight position={[4, 6, 4]} intensity={2.1} castShadow /><WorldDecor world={world} /><Floor world={world} />
-    <MainCharacters3D selectedId="slava" activity={heroActivity} target={guide.objective || environment} />
+    <MainCharacters3D selectedId={selectedCharacterId} activity={heroActivity} target={guide.objective || environment} onSelect={onCharacterSelect} />
     {environment && <WorldEnvironment3D environment={environment} onActivate={(item) => { emitCoOp('objective', { environmentId: item.id }); onWorldEvent?.({ type: 'environment_activate', environmentId: item.id, world }); }} />}
     {minigame?.status === 'running' && <MinigameObjectives3D world={world} collected={collectedObjectives} onCollect={(item) => { onObjectiveCollect?.(item); emitCoOp('objective', { objectiveId: item?.id }); }} />}
     <NPCCharacters3D npcs={npcs} onEvent={(npc) => { const reaction = npcReaction(npc, 'near'); setNpcEvent(reaction?.state || 'progress'); onWorldEvent?.(reaction); }} />

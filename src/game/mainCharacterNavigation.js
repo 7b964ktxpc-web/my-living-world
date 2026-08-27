@@ -1,4 +1,4 @@
-import {normalizeActiveHero} from './mainCharacters';
+import {normalizeActiveHero} from './mainCharacters.js';
 
 const HOME={slava:{x:-0.72,z:0},denis:{x:0.72,z:0}};
 

@@ -1,5 +1,5 @@
-import {teamStateFor} from './teamPlayRuntime';
-import {sceneTeamEvent} from './teamPlayScene';
+import {teamStateFor} from './teamPlayRuntime.js';
+import {sceneTeamEvent} from './teamPlayScene.js';
 
 export function createCoOpState(world){return {world,event:null,team:teamStateFor(world,'near'),scene:null,updatedAt:0}}
 export function applyCoOpEvent(state,event,now=Date.now()){

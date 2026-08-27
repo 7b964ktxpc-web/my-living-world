@@ -13,16 +13,14 @@ export function loadImage(source){
 
 function brightness(data,i){return (data[i]+data[i+1]+data[i+2])/3}
 function blackRatio(ctx,x,y,size=28){
-  const sx=clamp(Math.round(x-size/2),0,ctx.canvas.width-size);
-  const sy=clamp(Math.round(y-size/2),0,ctx.canvas.height-size);
+  const sx=clamp(Math.round(x-size/2),0,Math.max(0,ctx.canvas.width-size));
+  const sy=clamp(Math.round(y-size/2),0,Math.max(0,ctx.canvas.height-size));
   const p=ctx.getImageData(sx,sy,size,size).data;
   let dark=0;
   for(let i=0;i<p.length;i+=4) if(brightness(p,i)<82) dark++;
   return dark/(p.length/4);
 }
 
-// The printable protocol reserves a small black square near each corner.
-// We search a grid around the expected corner zones and return the strongest hit.
 export function detectCornerMarkers(ctx){
   const w=ctx.canvas.width,h=ctx.canvas.height;
   const zones=[[.12,.12],[.88,.12],[.12,.88],[.88,.88]];
@@ -62,10 +60,10 @@ export async function scanDrawing(file){
   octx.fillStyle='#fff';octx.fillRect(0,0,ow,oh);
   octx.drawImage(source,left,top,right-left,bottom-top,0,0,ow,oh);
   return {
-    dataUrl:out.toDataURL('image/jpeg',.92),
-    width:ow,height:oh,
+    dataUrl:out.toDataURL('image/jpeg',.92),width:ow,height:oh,
     confidence:clamp(markerResult.confidence*1.2+(markerResult.detected?.35:.08),0,0.99),
     detected:markerResult.detected,
+    usedMarkerHint:markerResult.detected,
     markers:markerResult.markers.map(m=>({x:m.x/w,y:m.y/h,score:m.score}))
   };
 }

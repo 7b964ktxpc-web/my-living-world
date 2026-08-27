@@ -1,4 +1,4 @@
-import {npcForWorld} from './npcEngine';
+import {npcForWorld} from './npcEngine.js';
 
 export const NPC_QUESTS={
  space:{id:'npc-space-guide',objective:'Подлети к маяку',hint:'Робот-пилот покажет дорогу к звёздам маяка.'},

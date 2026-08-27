@@ -1,4 +1,4 @@
-import {teamActionFor} from './teamPlay';
+import {teamActionFor} from './teamPlay.js';
 
 export function sceneTeamEvent(world,event){
   const action=teamActionFor(world,event);

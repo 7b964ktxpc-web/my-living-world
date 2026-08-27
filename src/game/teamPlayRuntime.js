@@ -1,4 +1,4 @@
-import {teamActionFor,teamPromptFor} from './teamPlay';
+import {teamActionFor,teamPromptFor} from './teamPlay.js';
 
 export function createTeamState(world){return {world,event:null,action:null,prompt:null,updatedAt:0}}
 export function updateTeamState(state,event,now=Date.now()){

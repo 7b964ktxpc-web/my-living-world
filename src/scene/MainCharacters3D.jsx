@@ -2,26 +2,38 @@ import React,{useEffect,useRef,useState} from 'react';
 import {Float,Text,useFrame} from '@react-three/drei';
 import {mainCharacters} from '../game/mainCharacters';
 import {heroPairBehavior} from '../game/mainCharacterBehavior';
+import {navigationState,companionTarget} from '../game/mainCharacterNavigation';
 
-function MainCharacter({character,selected,behavior,onSelect}){
+function MainCharacter({character,selected,behavior,target,onSelect}){
   const h=character.heightScale;
   const accent=character.accent==='sky'?'#dbeafe':'#bfdbfe';
   const root=useRef(null);
   const body=useRef(null);
-  useFrame((state)=>{
+  const current=useRef({x:character.id==='slava'?-0.72:0.72,z:0});
+  useEffect(()=>{current.current={x:character.id==='slava'?-0.72:0.72,z:0}},[character.id]);
+  useFrame((state,delta)=>{
+    const nav=navigationState(character.id,target,current.current);
+    const speed=behavior.speed||0;
+    if(speed>0&&!nav.reached){
+      const step=Math.min(1,delta*speed);
+      current.current.x+=nav.dx*step;
+      current.current.z+=nav.dz*step;
+      if(root.current){root.current.position.x=current.current.x;root.current.position.z=current.current.z;}
+      if(root.current&&Math.hypot(nav.dx,nav.dz)>.03)root.current.rotation.y=Math.atan2(nav.dx,nav.dz);
+    }
     const t=state.clock.elapsedTime*behavior.speed;
     const bounce=Math.abs(Math.sin(t*5))*behavior.bounce;
     const sway=Math.sin(t*2.5)*behavior.sway;
-    if(root.current) root.current.position.y=bounce;
-    if(body.current) body.current.rotation.z=sway;
+    if(root.current)root.current.position.y=bounce;
+    if(body.current)body.current.rotation.z=sway;
   });
   return <group ref={root} position={[character.id==='slava'?-0.72:0.72,-1.25,0]} scale={[h,h,h]} onClick={e=>{e.stopPropagation();onSelect?.(character.id)}}>
     <group ref={body} position={[0,1.2,0]}>
       <mesh position={[0,0.75,0]}><sphereGeometry args={[.29,20,20]}/><meshStandardMaterial color="#f3c79f"/></mesh>
       <mesh position={[0,0.86,-.03]}><sphereGeometry args={[.25,20,12]}/><meshStandardMaterial color="#b7783b"/></mesh>
       <mesh position={[0,.42,0]}><boxGeometry args={[.56,.72,.34]}/><meshStandardMaterial color="#f5f5f4"/></mesh>
-      <mesh position={[-.17,.0,0]}><boxGeometry args={[.18,.68,.23]}/><meshStandardMaterial color="#e7e5e4"/></mesh>
-      <mesh position={[.17,.0,0]}><boxGeometry args={[.18,.68,.23]}/><meshStandardMaterial color="#e7e5e4"/></mesh>
+      <mesh position={[-.17,0,0]}><boxGeometry args={[.18,.68,.23]}/><meshStandardMaterial color="#e7e5e4"/></mesh>
+      <mesh position={[.17,0,0]}><boxGeometry args={[.18,.68,.23]}/><meshStandardMaterial color="#e7e5e4"/></mesh>
       <mesh position={[-.15,-.39,.02]}><boxGeometry args={[.18,.22,.3]}/><meshStandardMaterial color="#f8fafc"/></mesh>
       <mesh position={[.15,-.39,.02]}><boxGeometry args={[.18,.22,.3]}/><meshStandardMaterial color="#f8fafc"/></mesh>
       <mesh position={[0,.5,.19]}><boxGeometry args={[.08,.08,.03]}/><meshStandardMaterial color={accent}/></mesh>
@@ -32,10 +44,14 @@ function MainCharacter({character,selected,behavior,onSelect}){
   </group>
 }
 
-export default function MainCharacters3D({selectedId,onSelect,activity='idle'}){
+export default function MainCharacters3D({selectedId,onSelect,activity='idle',target=null}){
   const [active,setActive]=useState(selectedId||'slava');
   useEffect(()=>{if(selectedId)setActive(selectedId)},[selectedId]);
   const choose=id=>{setActive(id);onSelect?.(id)};
   const pair=heroPairBehavior(active,activity);
-  return <group>{mainCharacters().map(c=><MainCharacter key={c.id} character={c} selected={active===c.id} behavior={c.id===active?pair.active:pair.companion} onSelect={choose}/>)}</group>
+  const partnerTarget=companionTarget(active,target);
+  return <group>{mainCharacters().map(c=>{
+    const isActive=c.id===active;
+    return <MainCharacter key={c.id} character={c} selected={isActive} behavior={isActive?pair.active:pair.companion} target={isActive?target:partnerTarget} onSelect={choose}/>;
+  })}</group>
 }
